@@ -1,8 +1,8 @@
-package core_http_utils
+package core_http_request
 
 import (
 	"fmt"
-	"net/http"
+	"net/http" 
 	"strconv"
 
 	core_errors "github.com/Rics69/task-tracker/internal/core/errors"
