@@ -12,8 +12,8 @@ env-down:
 env-cleanup:
 	@read -p "Очистить volume файлы бд? Опасность утери данных. [y/N]: " ans; \
 	if [ "$$ans" = "y" ]; then \
-		docker compose down task-tracker-postgres && \
-		rm -rf out/pgdata && \
+		docker compose down task-tracker-postgres port-forwarder && \
+		rm -rf ${PROJECT_ROOT}/out/pgdata && \
 		echo "Файлы очищены"; \
 	else \
 		echo "Очистка отменена"; \
@@ -51,3 +51,9 @@ migrate-action:
 		-path /migrations \
 		-database postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@task-tracker-postgres:5432/${POSTGRES_DB}?sslmode=disable \
 		"$(action)"
+
+tasktracker-run:
+	@export LOGGER_FOLDER=${PROJECT_ROOT}/out/logs && \
+	export POSTGRES_HOST=localhost && \
+	go mod tidy && \
+	go run ${PROJECT_ROOT}/cmd/task-tracker/main.go
