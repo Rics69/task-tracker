@@ -6,18 +6,28 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	core_logger "github.com/Rics69/task-tracker/internal/core/logger"
 	core_pgx_pool "github.com/Rics69/task-tracker/internal/core/repository/postgres/pool/pgx"
 	core_http_middleware "github.com/Rics69/task-tracker/internal/core/transport/http/middleware"
 	core_http_server "github.com/Rics69/task-tracker/internal/core/transport/http/server"
+	tasks_postgres_repository "github.com/Rics69/task-tracker/internal/features/tasks/repository/postgres"
+	tasks_service "github.com/Rics69/task-tracker/internal/features/tasks/service"
+	tasks_transport_http "github.com/Rics69/task-tracker/internal/features/tasks/transport/http"
 	users_postgres_repository "github.com/Rics69/task-tracker/internal/features/users/repository/postgres"
 	users_service "github.com/Rics69/task-tracker/internal/features/users/service"
 	users_tranpsort_http "github.com/Rics69/task-tracker/internal/features/users/transport/http"
 	"go.uber.org/zap"
 )
 
+var (
+	timeZone = time.UTC
+)
+
 func main() {
+	time.Local = timeZone
+
 	ctx, cancel := signal.NotifyContext(
 		context.Background(),
 		syscall.SIGINT, syscall.SIGTERM,
@@ -33,6 +43,8 @@ func main() {
 
 	defer logger.Close()
 
+	logger.Debug("application time zone", zap.Any("zone", timeZone))
+
 	logger.Debug("initializing postgres connection pool")
 	pool, err := core_pgx_pool.NewPool(ctx, core_pgx_pool.NewConfigMust())
 	if err != nil {
@@ -44,8 +56,14 @@ func main() {
 	logger.Debug("initializing feature", zap.String("feature", "users"))
 
 	usersRepository := users_postgres_repository.NewUsersRepository(pool)
-	userService := users_service.NewUsersService(usersRepository)
-	usersTransportHTTP := users_tranpsort_http.NewUsersHTTPHandler(userService)
+	usersService := users_service.NewUsersService(usersRepository)
+	usersTransportHTTP := users_tranpsort_http.NewUsersHTTPHandler(usersService)
+
+	logger.Debug("initializing feature", zap.String("feature", "tasks"))
+
+	tasksRepository := tasks_postgres_repository.NewTasksRepository(pool)
+	tasksService := tasks_service.NewTasksService(tasksRepository)
+	tasksTransportHTTP := tasks_transport_http.NewTasksHTTPHandler(tasksService)
 
 	logger.Debug("initializing HTTP server")
 
@@ -60,6 +78,8 @@ func main() {
 
 	apiVersionRouter := core_http_server.NewAPIVersionRouter(core_http_server.ApiVersion1)
 	apiVersionRouter.RegisterRoutes(usersTransportHTTP.Routes()...)
+	apiVersionRouter.RegisterRoutes(tasksTransportHTTP.Routes()...)
+
 	httpServer.RegisterAPIRouters(apiVersionRouter)
 
 	if err := httpServer.Run(ctx); err != nil {
