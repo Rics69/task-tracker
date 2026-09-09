@@ -65,4 +65,10 @@ tasktracker-run:
 	@export LOGGER_FOLDER=${PROJECT_ROOT}/out/logs && \
 	export POSTGRES_HOST=localhost && \
 	go mod tidy && \
-	go run ${PROJECT_ROOT}/cmd/task-tracker/main.go
+	go run ${PROJECT_ROOT}/cmd/tasktracker/main.go
+
+tasktracker-deploy:
+	@docker compose up -d --build task-tracker
+
+ps:
+	@docker compose ps
