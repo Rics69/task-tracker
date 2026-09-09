@@ -70,5 +70,8 @@ tasktracker-run:
 tasktracker-deploy:
 	@docker compose up -d --build task-tracker
 
+tasktracker-undeploy:
+	@docker compose down task-tracker
+
 ps:
 	@docker compose ps
