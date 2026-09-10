@@ -3,10 +3,10 @@ package users_tranpsort_http
 import "github.com/Rics69/task-tracker/internal/core/domain"
 
 type UserDTOResponse struct {
-	ID          int     `json:"id"`
-	Version     int     `json:"version"`
-	FullName    string  `json:"full_name"`
-	PhoneNumber *string `json:"phone_number"`
+	ID          int     `json:"id" example:"1"`
+	Version     int     `json:"version" example:"3"`
+	FullName    string  `json:"full_name" example:"Ivan Ivanov"`
+	PhoneNumber *string `json:"phone_number" example:"+79999998877 "`
 }
 
 func userDTOFromDomain(user domain.User) UserDTOResponse {
