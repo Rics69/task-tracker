@@ -75,3 +75,11 @@ tasktracker-undeploy:
 
 ps:
 	@docker compose ps
+
+swagger-gen:
+	@docker compose run --rm swagger \
+		init \
+		-g cmt/tasktracker/main.go \
+		-o docs \
+		--parseInternal \
+		--parseDependency
